@@ -30,8 +30,9 @@ COPY . .
 RUN --mount=type=cache,target=/tmp/uv-cache \
     uv sync --frozen --no-dev
 
-# Change ownership of app directory
-RUN chown -R appuser:appuser /app
+# Create cache directory and change ownership
+RUN mkdir -p /tmp/uv-cache && \
+    chown -R appuser:appuser /app /tmp/uv-cache
 
 # Switch to non-root user
 USER appuser
