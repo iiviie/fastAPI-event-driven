@@ -26,13 +26,12 @@ RUN --mount=type=cache,target=/tmp/uv-cache \
 # Copy application code
 COPY . .
 
-# Install the application
-RUN --mount=type=cache,target=/tmp/uv-cache \
-    uv sync --frozen --no-dev
+# Install the application (without cache to avoid permission issues)
+RUN uv sync --frozen --no-dev
 
-# Create cache directory and change ownership
+# Create cache directory and change ownership after all uv operations
 RUN mkdir -p /tmp/uv-cache && \
-    chown -R appuser:appuser /app /tmp/uv-cache
+    chown -R appuser:appuser /app
 
 # Switch to non-root user
 USER appuser
