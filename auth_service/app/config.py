@@ -36,6 +36,10 @@ class Settings(BaseSettings):
         default="postgresql+asyncpg://auth_user:auth_password@localhost:5432/auth_db",
         description="Database URL"
     )
+    database_url_sync: str = Field(
+        default="postgresql+psycopg2://auth_user:auth_password@localhost:5432/auth_db",
+        description="Synchronous Database URL for Alembic migrations"
+    )
     
     # Redis
     redis_url: str = Field(

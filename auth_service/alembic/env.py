@@ -17,8 +17,8 @@ from app.config import settings
 # access to the values within the .ini file in use.
 config = context.config
 
-# Set the database URL from our settings
-config.set_main_option('sqlalchemy.url', settings.database_url)
+# Set the database URL from our settings (use sync URL for migrations)
+config.set_main_option('sqlalchemy.url', settings.database_url_sync)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
