@@ -1,30 +1,36 @@
-# ---- Base stage ----
-FROM python:3.12-slim AS base
+# Start with slim Python image
+FROM python:3.12-slim
 
 WORKDIR /app
 
+# Install system dependencies FIRST (this rarely changes, so it gets cached)
+RUN apt-get update && apt-get install -y \
+    postgresql-client \
+    redis-tools \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install uv (also rarely changes)
 RUN pip install --no-cache-dir uv
 
-# Copy dependency files only
+# Copy ONLY dependency files (this layer only rebuilds when deps change)
 COPY pyproject.toml uv.lock ./
 
-# Install deps into /.venv
-RUN uv sync --frozen --no-dev --no-cache
+# Install Python dependencies
+RUN uv sync --frozen --no-dev
 
-# ---- Runtime stage ----
-FROM python:3.12-slim AS runtime
+# Copy the rest of the application (this rebuilds on code changes)
+COPY ./app ./app
+COPY ./alembic ./alembic
+COPY ./alembic.ini ./alembic.ini
+COPY ./entrypoint.sh ./entrypoint.sh
 
-WORKDIR /app
+# Make entrypoint executable
+RUN chmod +x entrypoint.sh
 
-# Copy virtual environment from base
-COPY --from=base /app/.venv /app/.venv
+# Set Python path to use uv's virtual environment
 ENV PATH="/app/.venv/bin:$PATH"
 
-# Copy app source
-COPY ./app ./app
-
-# Expose port
 EXPOSE 8000
 
-# Run Uvicorn with 4 workers + reload
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload", "--reload-dir", "app"]
+ENTRYPOINT ["./entrypoint.sh"]

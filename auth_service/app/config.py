@@ -33,7 +33,7 @@ class Settings(BaseSettings):
     
     # Database
     database_url: str = Field(
-        default="postgresql+asyncpg://user:password@localhost:5432/auth_db",
+        default="postgresql+asyncpg://auth_user:auth_password@localhost:5432/auth_db",
         description="Database URL"
     )
     
