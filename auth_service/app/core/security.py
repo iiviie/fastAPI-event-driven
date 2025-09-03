@@ -22,7 +22,19 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     else:
         expire = datetime.now(timezone.utc) + timedelta(minutes=settings.access_token_expire_minutes)
     
-    to_encode.update({"exp": expire})
+    to_encode.update({"exp": expire, "type": "access"})
+    encoded_jwt = jwt.encode(to_encode, settings.secret_key, algorithm=settings.algorithm)
+    return encoded_jwt
+
+
+def create_refresh_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.now(timezone.utc) + expires_delta
+    else:
+        expire = datetime.now(timezone.utc) + timedelta(days=settings.refresh_token_expire_days)
+    
+    to_encode.update({"exp": expire, "type": "refresh"})
     encoded_jwt = jwt.encode(to_encode, settings.secret_key, algorithm=settings.algorithm)
     return encoded_jwt
 
@@ -61,7 +73,8 @@ async def get_current_user(
     try:
         payload = jwt.decode(credentials.credentials, settings.secret_key, algorithms=[settings.algorithm])
         email: str = payload.get("sub")
-        if email is None:
+        token_type: str = payload.get("type")
+        if email is None or token_type != "access":
             raise credentials_exception
     except JWTError:
         raise credentials_exception
@@ -70,6 +83,18 @@ async def get_current_user(
     if user is None:
         raise credentials_exception
     return user
+
+
+def verify_refresh_token(token: str) -> Optional[str]:
+    try:
+        payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
+        email: str = payload.get("sub")
+        token_type: str = payload.get("type")
+        if email is None or token_type != "refresh":
+            return None
+        return email
+    except JWTError:
+        return None
 
 
 async def get_current_active_user(current_user: User = Depends(get_current_user)) -> User:

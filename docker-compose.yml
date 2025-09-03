@@ -62,7 +62,6 @@ services:
       retries: 3
     command: redis-server --appendonly yes
 
-  # Optional: Database management tool
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: auth-pgadmin
@@ -79,7 +78,6 @@ services:
     profiles:
       - tools
 
-  # Optional: Redis management tool
   redis-commander:
     image: rediscommander/redis-commander:latest
     container_name: auth-redis-commander
